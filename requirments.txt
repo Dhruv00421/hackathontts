@@ -1,0 +1,14 @@
+Django>=4.0
+pytesseract
+Pillow
+python-docx
+PyPDF2
+python-pptx
+pyttsx3
+gTTS
+langdetect
+pycountry
+torch
+TTS
+googletrans==4.0.0-rc1
+requests
