@@ -139,6 +139,8 @@
             onclick="window.location.href='/?functionality=image-to-speech'">Image-to-Speech</button>
         <button class="{% if functionality == 'ppt-to-speech' %}active{% endif %}"
             onclick="window.location.href='/?functionality=ppt-to-speech'">PPT-to-Speech</button>
+        <button class="{% if functionality == 'Translation' %}active{% endif %}"
+            onclick="window.location.href='/?functionality=Translation'">Translation</button>
 
     </div>
 
@@ -212,6 +214,34 @@
             </select>
 
             <button type="submit">Convert</button>
+        </form>
+        <!--   Different language model-->
+        {% elif functionality == "Translation" %}
+        <h3>Convertor</h3>
+        <form id="language_model">
+            <label for="text">Enter Text:</label>
+            <textarea id="input_text" name="text" rows="4" required></textarea>
+
+            <label for="language">Select Language:</label>
+            <select name="target_language" id="languageSelect">
+              <option value="en">English</option>
+              <option value="fr">French</option>
+              <option value="hi">Hindi</option>
+              <option value="es">Spanish</option>
+              <option value="de">German</option>
+            </select>
+
+
+            <label for="speed">Speed:</label>
+            <input type="number" id="speech_speed" name="speed" min="50" max="300" step="10" value="150">
+
+            <label for="pitch">Pitch:</label>
+            <input type="number" id="speech_pitch" name="pitch" min="0.5" max="2.0" step="0.1" value="1.0">
+
+            <button type="submit">Convert to Speech</button>
+            <button type="button" onclick="detectLanguage()">Detect Language</button>
+            <p id="detected-language" style="font-weight: bold;"></p>
+
         </form>
         {% endif %}
     </div>
@@ -379,6 +409,60 @@
             } catch (err) {
                 console.error("Error:", err);
                 alert("Something went wrong during PPT-to-Speech conversion.");
+            }
+        });
+
+        // Detection
+        async function detectLanguage() {
+            const inputText = document.getElementById("input_text").value;
+
+            if (!inputText.trim()) {
+                alert("Please enter text to detect language.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("text", inputText);
+
+            try {
+                const response = await fetch("/detect-language/", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.language) {
+                    document.getElementById("detected-language").textContent = "Detected Language: " + data.language;
+                } else {
+                    alert("Language detection failed.");
+                }
+            } catch (err) {
+                console.error("Detection Error:", err);
+                alert("Something went wrong during language detection.");
+            }
+        }
+
+
+        // Translation
+        document.getElementById("language_model")?.addEventListener("submit", async function(event) {
+            event.preventDefault();
+            let formData = new FormData(this);
+
+            // Get the selected language
+            const language = document.getElementById("languageSelect").value;
+            formData.append("language", language); // Append the language to the form data
+
+            let response = await fetch("/translation/", {
+                method: "POST",
+                body: formData
+            });
+
+            let data = await response.json();
+            if (data.audio_url) {
+                updateFileList(data.files);
+            } else {
+                alert("Error: " + (data.error || "Something went wrong!"));
             }
         });
 
